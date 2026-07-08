@@ -8,3 +8,4 @@ anyhow = "1.0.98"
 kvm-ioctls = "0.25.0"
 nix = { version = "0.31.3", features = ["fs", "mman"] }
 kvm-bindings = "0.14.0"
+ctrlc = "3.5.2"
