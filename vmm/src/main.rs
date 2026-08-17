@@ -1,6 +1,12 @@
+use anyhow::Context;
 use log::error;
 use std::{env, io, panic, path::PathBuf};
 use vmm_sys_util::terminal::Terminal;
+
+mod arch;
+mod devices;
+mod vmm;
+use vmm::Vmm;
 
 #[derive(argh::FromArgs, Debug)] // Procedural macro to implement common traits
 #[argh(description = "A simple hypervisor")] // Derive-based arg parser
@@ -42,7 +48,7 @@ fn main() -> anyhow::Result<()> {
         // This closure takes ownership of data out of its scope
         error!("ember {}", info);
 
-        // NOTE: Lock for whom? thread?
+        // Prevent concurrent threads from reading stdin while operation occurs
         if let Err(err) = stdin.lock().set_canon_mode() {
             error!(
                 "Failure while trying to reset stdin to canonical mode: {}",
@@ -56,6 +62,36 @@ fn main() -> anyhow::Result<()> {
         print_version();
         return Ok(());
     }
+
+    let kernel = args
+        .kernel
+        .ok_or(anyhow::anyhow!("kernel argument required"))?;
+
+    // TODO: Configurable
+    let ram_size: u64 = 0x8000_0000; // 2 GBs
+
+    let mut vm = Vmm::new(ram_size).context("faild to create VMM")?;
+    vm.init().context("failed to init VMM")?;
+
+    let boot_src_cfg = arch::BootSourceConfig {
+        // Lossy happens when converting byte sequences from one encoding to another
+        // so we replace/drop some characters
+        kernel_image_path: kernel.to_string_lossy().to_string(),
+        initramfs_path: args.initramfs.map(|p| p.to_string_lossy().to_string()),
+        boot_args: args.boot_cmdline,
+    };
+
+    vm.load_image(&boot_src_cfg)
+        .context("failed to load image")?;
+
+    // NOTE:: Does it run on another process? Do we need to fork one?
+    vm.run().context("failed to run VMM")?;
+
+    // NOTE: Does this run on the new process of the VM?
+    stdin
+        .lock()
+        .set_canon_mode()
+        .context("failed to reset stdin to canonical mode")?;
 
     Ok(())
 }

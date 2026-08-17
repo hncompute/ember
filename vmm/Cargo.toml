@@ -15,3 +15,5 @@ nix = { version = "0.31.3", features = ["fs", "mman"] }
 kvm-bindings = "0.14.0"
 ctrlc = "3.5.2"
 vmm-sys-util = "0.15.0"
+vm-memory = { version = "0.18.0", features = ["backend-mmap"] }
+linux-loader = { version = "0.14.0", features = ["bzimage"] }
