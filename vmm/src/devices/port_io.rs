@@ -1,5 +1,9 @@
 use std::sync::{Arc, Mutex};
 
+use vmm_sys_util::eventfd::EventFd;
+
+use crate::devices::{BusDevice, EventFdTrigger};
+
 // Wrapper to register legacy(?) devices on I/O bus
 // currently manage uart and i8042 devices?
 #[derive(Debug)]
