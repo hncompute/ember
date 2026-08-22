@@ -28,4 +28,23 @@ impl Vmm {
             pio_device_manager: None,
         })
     }
+
+    pub fn init(&mut self) -> Result<()> {
+        // Call ioctl underneath
+        let vcpu = self.vm.create_vcpu(0).context("failed to create vcpu")?;
+
+        crate::arch::vcpu::init_cpu_id(&self.kvm, &vcpu)?;
+
+        // TODO: Init model specific registers (msrs?) and long mode?
+
+        crate::arch::regs::init_regs(&vcpu, crate::arch::layout::KERNEL_START_ADDRESS)?;
+
+        // Floating-point unit, math coprocessor?
+        crate::arch::regs::init_fpu(&vcpu)?;
+        crate::arch::regs::init_sregs(&self.guest_mem, &vcpu)?;
+
+        self.vcpu = Some(vcpu);
+
+        Ok(())
+    }
 }
