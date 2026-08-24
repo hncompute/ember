@@ -81,18 +81,6 @@ fn main() -> anyhow::Result<()> {
         boot_args: args.boot_cmdline,
     };
 
-    vm.load_image(&boot_src_cfg)
-        .context("failed to load image")?;
-
-    // NOTE:: Does it run on another process? Do we need to fork one?
-    vm.run().context("failed to run VMM")?;
-
-    // NOTE: Does this run on the new process of the VM?
-    stdin
-        .lock()
-        .set_canon_mode()
-        .context("failed to reset stdin to canonical mode")?;
-
     Ok(())
 }
 

@@ -8,3 +8,6 @@ pub const KERNEL_START_ADDRESS: u64 = 0x0010_0000; // 1 MB
 
 /// Zero page aka linux kernel bootparams (virtual memory map + user program args)
 pub const ZERO_PAGE_START: u64 = 0x7000;
+
+/// Initial stack for the boot CPU.
+pub const BOOT_STACK_POINTER: u64 = 0x8ff0;

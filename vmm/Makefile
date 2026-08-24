@@ -3,6 +3,9 @@ all: release
 check:
 	cargo check
 
+test:
+	cargo test
+
 debug:
 	cargo build
 
