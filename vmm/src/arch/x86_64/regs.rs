@@ -102,6 +102,7 @@ fn configure_segments_and_sregs(guest_mem: &GuestMemoryMmap, sregs: &mut kvm_sre
     sregs.gdt.limit = u16::try_from(std::mem::size_of_val(&gdt_table))? - 1;
 
     // Interrupt descriptor table
+    // NOTE: Need to have working GDT first
     write_idt_value(0, guest_mem)?;
     sregs.idt.base = BOOT_IDT_OFFSET;
     sregs.idt.limit = u16::try_from(std::mem::size_of::<u64>())? - 1;

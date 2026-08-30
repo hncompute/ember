@@ -81,6 +81,8 @@ fn main() -> anyhow::Result<()> {
         boot_args: args.boot_cmdline,
     };
 
+    vm.load_image(&boot_src_cfg)
+        .context("failed to load image")?;
     Ok(())
 }
 

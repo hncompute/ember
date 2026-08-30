@@ -1,8 +1,9 @@
+pub mod gdt;
 pub mod irq;
 pub mod layout;
 pub mod memory;
-pub mod vcpu;
 pub mod regs;
-pub mod gdt;
+pub mod system;
+pub mod vcpu;
 
 // TODO: mod vgpu?

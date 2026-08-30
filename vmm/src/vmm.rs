@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use kvm_ioctls::{Kvm, VcpuFd, VmFd};
 use vm_memory::GuestMemoryMmap;
 
-use crate::devices::PortIODeviceManager;
+use crate::{arch::DEFAULT_KERNEL_CMDLINE, devices::PortIODeviceManager};
 
 pub struct Vmm {
     pub kvm: Kvm,
@@ -44,6 +44,32 @@ impl Vmm {
         crate::arch::regs::init_sregs(&self.guest_mem, &vcpu)?;
 
         self.vcpu = Some(vcpu);
+
+        Ok(())
+    }
+
+    pub fn load_image(&self, boot_src_cfg: &crate::arch::BootSourceConfig) -> Result<()> {
+        crate::arch::system::load_kernel(&boot_src_cfg.kernel_image_path, &self.guest_mem)
+            .context("failed to load kernel")?;
+
+        let initramfs = match &boot_src_cfg.initramfs_path {
+            Some(p) => Some(
+                crate::arch::system::load_initramfs(p, &self.guest_mem)
+                    .context("failed to load initramfs")?,
+            ),
+            None => None,
+        };
+
+        let (cmdline_addr, cmdline_size) =
+            crate::arch::system::load_boot_cmdline(&boot_src_cfg.boot_args, &self.guest_mem)
+                .context("failed to load boot cmdline")?;
+
+        crate::arch::system::configure_system(
+            &self.guest_mem,
+            cmdline_addr,
+            cmdline_size,
+            &initramfs,
+        )?;
 
         Ok(())
     }
