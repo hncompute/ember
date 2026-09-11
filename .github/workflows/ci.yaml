@@ -1,13 +1,36 @@
 name: CI
 
 on:
-  push:
   pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: Rust checks
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --locked --manifest-path vmm/Cargo.toml
+        with:
+          components: rustfmt, clippy
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path vmm/Cargo.toml --all -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --locked --manifest-path vmm/Cargo.toml --all-targets -- -D warnings
+
+      - name: Run tests
+        run: cargo test --locked --manifest-path vmm/Cargo.toml
