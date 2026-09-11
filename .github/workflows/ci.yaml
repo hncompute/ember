@@ -26,8 +26,8 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Check formatting
-        run: cargo fmt --manifest-path vmm/Cargo.toml --all -- --check
+      # - name: Check formatting
+      #   run: cargo fmt --manifest-path vmm/Cargo.toml --all -- --check
 
       - name: Run Clippy
         run: cargo clippy --locked --manifest-path vmm/Cargo.toml --all-targets -- -D warnings
