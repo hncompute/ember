@@ -83,6 +83,9 @@ fn main() -> anyhow::Result<()> {
 
     vm.load_image(&boot_src_cfg)
         .context("failed to load image")?;
+
+    // vm.run().context("failed to run VMM")?;
+
     Ok(())
 }
 
