@@ -1,8 +1,10 @@
 use anyhow::{Context, Result};
-use kvm_ioctls::{Kvm, VcpuFd, VmFd};
+use kvm_ioctls::{Kvm, VcpuExit, VcpuFd, VmFd};
+use log::{error, info};
 use vm_memory::GuestMemoryMmap;
+use vm_superio::Trigger;
 
-use crate::{arch::DEFAULT_KERNEL_CMDLINE, devices::PortIODeviceManager};
+use crate::devices::{Bus, EventFdTrigger, PortIODeviceManager, setup_serial_device};
 
 pub struct Vmm {
     pub kvm: Kvm,
@@ -72,5 +74,85 @@ impl Vmm {
         )?;
 
         Ok(())
+    }
+
+    pub fn run(&mut self) -> Result<()> {
+        let serial_device = setup_serial_device(std::io::stdin(), std::io::stdout())?;
+        let mut pio_device_manager = PortIODeviceManager::new(serial_device.clone())?;
+        pio_device_manager.register_devices(&self.vm)?;
+
+        let vcpu_exit_evt = self.start_threaded(pio_device_manager.io_bus.clone())?;
+
+        Ok(())
+    }
+
+    fn start_threaded(&mut self, pio_bus: Bus) -> Result<EventFdTrigger> {
+        let vcpu = match std::mem::take(&mut self.vcpu) {
+            // Take ownership, replace with empty
+            Some(vcpu) => vcpu,
+            None => return Err(anyhow::anyhow!("vcpu is not initialized")),
+        };
+
+        let exit_evt = EventFdTrigger::new();
+
+        // Multiple threads to interact with this FD
+        let vcpu_exit_evt = exit_evt.try_clone().context("failed to clone eventfd")?;
+
+        let builder = std::thread::Builder::new();
+        let _ = builder
+            .name(String::from("vcpu0"))
+            .spawn(move || {
+                loop {
+                    match vcpu.run() {
+                        Ok(run) => match run {
+                            VcpuExit::IoIn(addr, data) => {
+                                pio_bus.read(addr.into(), data);
+                            }
+                            VcpuExit::IoOut(addr, data) => {
+                                pio_bus.write(addr.into(), data);
+                            }
+                            VcpuExit::MmioRead(_, _) => {
+                                info!("mmio read");
+                            }
+                            VcpuExit::MmioWrite(_, _) => {
+                                info!("mmio write");
+                            }
+                            VcpuExit::Hlt => {
+                                info!("KVM_EXIT_HLT");
+                                break;
+                            }
+                            VcpuExit::Shutdown => {
+                                error!("KVM_EXIT_SHUTDOWN");
+                                break;
+                            }
+                            VcpuExit::FailEntry(hardware_entry_failure_reason, _cpu) => {
+                                error!(
+                                    "KVM_EXIT_FAIL_ENTRY: Hardware Failure Reason: 0x{:X}",
+                                    hardware_entry_failure_reason
+                                );
+                                break;
+                            }
+                            VcpuExit::InternalError => {
+                                // TODO: Find how to print suberrors
+                                error!("KVM_EXIT_INTERNAL_ERROR");
+                                break;
+                            }
+                            r => {
+                                info!("KVM_EXIT: {:?}", r);
+                                break;
+                            }
+                        },
+
+                        Err(e) => {
+                            error!("VM run error: {:?}", e);
+                            break;
+                        }
+                    }
+                }
+                exit_evt.trigger().expect("failed to write to exit_evt");
+            })
+            .context("failed to spawn vcpu thread");
+
+        Ok(vcpu_exit_evt)
     }
 }
