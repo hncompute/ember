@@ -25,7 +25,8 @@ jobs:
         uses: osl-incubator/github-actions-chatgpt-pr-reviewer@555628ecb5239adf958efe3544113c12beb5ed58
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          openai_model: gpt-4o-mini
+          openai_model: ${{ vars.OPENAI_MODEL }}
+          openai_reasoning: ${{ vars.OPENAI_REASONING }}
           openai_temperature: 0.2
           openai_max_tokens: 4096
           prompt_project_introduction: >-
