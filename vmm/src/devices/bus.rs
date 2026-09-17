@@ -121,6 +121,12 @@ impl BusDevice {
             Self::Serial(x) => Some(x),
         }
     }
+
+    pub fn read(&mut self, offset: u64, data: &mut [u8]) {
+        match self {
+            Self::Serial(x) => x.bus_read(offset, data),
+        }
+    }
 }
 
 #[cfg(test)]
