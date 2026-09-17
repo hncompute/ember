@@ -1,0 +1,41 @@
+name: ChatGPT PR review
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: chatgpt-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review pull request
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Review with ChatGPT
+        # Release 1.1.0, pinned to an immutable commit.
+        uses: osl-incubator/github-actions-chatgpt-pr-reviewer@555628ecb5239adf958efe3544113c12beb5ed58
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_model: gpt-4o-mini
+          openai_temperature: 0.2
+          openai_max_tokens: 4096
+          prompt_project_introduction: >-
+            This project is a type-2 hypervisor written in Rust using KVM.
+            Prioritize correctness at unsafe and kernel ABI boundaries.
+          prompt_extra_criteria: |
+            Check unsafe code for documented and upheld safety invariants;
+            Check KVM ioctl structures, memory mappings, and resource cleanup;
+            Check concurrency, ownership, and error handling for correctness;
+          exclude_path: |
+            **/Cargo.lock
+          github_token: ${{ github.token }}
+          github_pr_id: ${{ github.event.pull_request.number }}
