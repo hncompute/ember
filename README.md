@@ -11,7 +11,7 @@ cd vmm
 make
 ```
 
-The `kvm-box` binary will be placed at `target/release/kvm-box`.
+The `ember` binary will be placed at `target/release/ember`.
 
 ## Preparing the kernel and initramfs
 
@@ -21,18 +21,19 @@ kernel: use pre-compiled and tuned files from firecracker:
 wget https://s3.amazonaws.com/spec.ccfc.min/img/quickstart_guide/x86_64/kernels/vmlinux.bin
 ```
 
-initrd:
+initramfs:
 
 ```shell
-git clone https://github.com/marcov/firecracker-initrd.git
-cd firecracker-initrd
+git clone https://github.com/marcov/firecracker-initramfs.git
+cd firecracker-initramfs
 bash -x ./build.sh
 ```
 
 ## Usage
 
 ```shell
-$ ./target/release/kvm-box --kernel ./testdata/vmlinux.bin --initrd ./testdata/initrd.img
+cd vmm
+./target/release/ember --kernel ./assets/vmlinux.bin --initramfs ./assets/initramfs.img
 ```
 
 ## TODOs
@@ -40,5 +41,6 @@ $ ./target/release/kvm-box --kernel ./testdata/vmlinux.bin --initrd ./testdata/i
 - [ ] GPU slicing (vGPU with virtio-gpu/qemu vhost-user-gpu)
 
 ## References
+
 - [kvm-host](https://github.com/sysprog21/kvm-host)
 - [virtio-spec-rs](https://github.com/sysprog21/kvm-host)
