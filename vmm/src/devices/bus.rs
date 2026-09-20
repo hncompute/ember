@@ -73,7 +73,7 @@ impl Bus {
 
     fn first_before(&self, addr: u64) -> Option<(BusRange, &Mutex<BusDevice>)> {
         for (range, dev) in self.devices.iter().rev() {
-            if range.0 < addr {
+            if range.0 <= addr {
                 return Some((*range, dev));
             }
         }
