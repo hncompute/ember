@@ -60,6 +60,17 @@ impl Bus {
         }
     }
 
+    pub fn write(&self, addr: u64, data: &[u8]) -> bool {
+        if let Some((offset, dev)) = self.get_device(addr) {
+            dev.lock()
+                .expect("Failed to acquire device lock")
+                .write(offset, data);
+            true
+        } else {
+            false
+        }
+    }
+
     fn first_before(&self, addr: u64) -> Option<(BusRange, &Mutex<BusDevice>)> {
         for (range, dev) in self.devices.iter().rev() {
             if range.0 < addr {
@@ -125,6 +136,12 @@ impl BusDevice {
     pub fn read(&mut self, offset: u64, data: &mut [u8]) {
         match self {
             Self::Serial(x) => x.bus_read(offset, data),
+        }
+    }
+
+    pub fn write(&mut self, offset: u64, data: &[u8]) {
+        match self {
+            Self::Serial(x) => x.bus_write(offset, data),
         }
     }
 }

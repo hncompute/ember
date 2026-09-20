@@ -30,9 +30,7 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-    if option_env!("RUST_LOG").is_none() {
-        // TODO: Why log?
-        // unsafe because nightly?
+    if env::var_os("RUST_LOG").is_none() {
         unsafe {
             env::set_var("RUST_LOG", "info");
         }
@@ -84,7 +82,12 @@ fn main() -> anyhow::Result<()> {
     vm.load_image(&boot_src_cfg)
         .context("failed to load image")?;
 
-    // vm.run().context("failed to run VMM")?;
+    vm.run().context("failed to run VMM")?;
+
+    std::io::stdin()
+        .lock()
+        .set_canon_mode()
+        .context("failed to reset stdin to canonical mode")?;
 
     Ok(())
 }

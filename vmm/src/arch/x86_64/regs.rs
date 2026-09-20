@@ -1,6 +1,7 @@
 use anyhow::{Context, Ok, Result};
 use kvm_bindings::{kvm_fpu, kvm_regs, kvm_sregs};
 use kvm_ioctls::VcpuFd;
+use log::{Level, log};
 use vm_memory::{Address, Bytes, GuestAddress, GuestMemoryBackend, GuestMemoryMmap};
 
 use crate::arch::gdt::{gdt_entry, kvm_segment_from_gdt};
@@ -37,6 +38,96 @@ const PDE64_PS: u64 = 1 << 7;
 const PROT_R: u64 = 1;
 const PROT_W: u64 = 2;
 const PROT_RW: u64 = PROT_R | PROT_W;
+
+pub fn dump_registers(vcpu: &VcpuFd, level: Level) -> Result<()> {
+    let regs = vcpu
+        .get_regs()
+        .context("failed to get general-purpose registers")?;
+    let sregs = vcpu
+        .get_sregs()
+        .context("failed to get special registers")?;
+
+    log!(level, "VCPU register state:");
+    log!(
+        level,
+        "RAX={:#018x} RBX={:#018x} RCX={:#018x} RDX={:#018x}",
+        regs.rax,
+        regs.rbx,
+        regs.rcx,
+        regs.rdx
+    );
+    log!(
+        level,
+        "RSI={:#018x} RDI={:#018x} RSP={:#018x} RBP={:#018x}",
+        regs.rsi,
+        regs.rdi,
+        regs.rsp,
+        regs.rbp
+    );
+    log!(
+        level,
+        " R8={:#018x}  R9={:#018x} R10={:#018x} R11={:#018x}",
+        regs.r8,
+        regs.r9,
+        regs.r10,
+        regs.r11
+    );
+    log!(
+        level,
+        "R12={:#018x} R13={:#018x} R14={:#018x} R15={:#018x}",
+        regs.r12,
+        regs.r13,
+        regs.r14,
+        regs.r15
+    );
+    log!(
+        level,
+        "RIP={:#018x} RFLAGS={:#018x} CR0={:#018x} CR2={:#018x}",
+        regs.rip,
+        regs.rflags,
+        sregs.cr0,
+        sregs.cr2
+    );
+    log!(
+        level,
+        "CR3={:#018x} CR4={:#018x} CR8={:#018x} EFER={:#018x}",
+        sregs.cr3,
+        sregs.cr4,
+        sregs.cr8,
+        sregs.efer
+    );
+    log!(
+        level,
+        "CS={:#06x}:{:#018x} SS={:#06x}:{:#018x} DS={:#06x}:{:#018x}",
+        sregs.cs.selector,
+        sregs.cs.base,
+        sregs.ss.selector,
+        sregs.ss.base,
+        sregs.ds.selector,
+        sregs.ds.base
+    );
+    log!(
+        level,
+        "ES={:#06x}:{:#018x} FS={:#06x}:{:#018x} GS={:#06x}:{:#018x}",
+        sregs.es.selector,
+        sregs.es.base,
+        sregs.fs.selector,
+        sregs.fs.base,
+        sregs.gs.selector,
+        sregs.gs.base
+    );
+    log!(
+        level,
+        "GDT={:#018x}/{:#06x} IDT={:#018x}/{:#06x} APIC_BASE={:#018x}",
+        sregs.gdt.base,
+        sregs.gdt.limit,
+        sregs.idt.base,
+        sregs.idt.limit,
+        sregs.apic_base
+    );
+
+    Ok(())
+}
 
 pub fn init_regs(vcpu: &VcpuFd, boot_ip: u64) -> Result<()> {
     let regs = kvm_regs {

@@ -62,3 +62,22 @@ pub struct SerialWrapper<T: Trigger, EV: SerialEvents, I: Read + AsRawFd + Send>
 /// NOTE: We don't intend to implement custom event handling, thus concrete NoEvents (replace SerialEventsWrapper).
 /// If yes, we need to `impl SerialEvents` trait with 4 event hooks/callbacks.
 pub type SerialDevice<I> = SerialWrapper<EventFdTrigger, NoEvents, I>;
+
+impl<I: Read + AsRawFd + Send + std::fmt::Debug + 'static>
+    SerialWrapper<EventFdTrigger, NoEvents, I>
+{
+    pub fn bus_read(&mut self, offset: u64, data: &mut [u8]) {
+        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) {
+            // Data returned from the serial port
+            data[0] = self.serial.read(offset)
+        }
+    }
+
+    pub fn bus_write(&mut self, offset: u64, data: &[u8]) {
+        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) {
+            if let Err(err) = self.serial.write(offset, data[0]) {
+                log::error!("Failed to write to serial: {:?}", err)
+            }
+        }
+    }
+}

@@ -3,6 +3,9 @@ pub const CMDLINE_START: u64 = 0x20000;
 /// Kernel command line maximum size (depend on 32/64-bit)
 pub const CMDLINE_MAX_SIZE: usize = 2048;
 
+/// Segment for task-switching (legacy?), IST, transition between privilege levels
+pub const KVM_TSS_ADDRESS: usize = 0xfffb_d000;
+
 /// Start of high memory (legacy compatibility?)
 pub const KERNEL_START_ADDRESS: u64 = 0x0010_0000; // 1 MB
 
