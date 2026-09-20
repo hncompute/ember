@@ -1,8 +1,12 @@
-use anyhow::{Context, Result};
-use kvm_ioctls::{Kvm, VcpuFd, VmFd};
-use vm_memory::GuestMemoryMmap;
 
-use crate::{arch::DEFAULT_KERNEL_CMDLINE, devices::PortIODeviceManager};
+use anyhow::{Context, Result};
+use kvm_ioctls::{Kvm, VcpuExit, VcpuFd, VmFd};
+use log::{error, info};
+use vm_memory::GuestMemoryMmap;
+use vm_superio::Trigger;
+use vmm_sys_util::{poll::PollContext, terminal::Terminal};
+
+use crate::devices::{Bus, EventFdTrigger, PortIODeviceManager, setup_serial_device};
 
 pub struct Vmm {
     pub kvm: Kvm,
@@ -72,5 +76,145 @@ impl Vmm {
         )?;
 
         Ok(())
+    }
+
+    pub fn run(&mut self) -> Result<()> {
+        let serial_device = setup_serial_device(std::io::stdin(), std::io::stdout())?;
+        let mut pio_device_manager = PortIODeviceManager::new(serial_device.clone())?;
+        pio_device_manager.register_devices(&self.vm)?;
+
+        let vcpu_exit_evt = self.start_threaded(pio_device_manager.io_bus.clone())?;
+
+        let stdin = std::io::stdin().lock();
+        stdin
+            .set_raw_mode()
+            .context("failed to start terminal raw mode")?;
+        stdin
+            .set_non_block(true) // Return immediately if no input data
+            .context("failed to set terminal non-block mode")?;
+
+        // Wrapper for Linux epoll FD to monitor async event sources
+        let poll_ctx: PollContext<u8> =
+            PollContext::new().context("failed to create epoll context")?;
+
+        // Init PollToken (check which device)
+        poll_ctx.add(&vcpu_exit_evt.0, 0)?;
+        poll_ctx.add(&stdin, 1)?;
+
+        self.pio_device_manager = Some(pio_device_manager);
+
+        loop {
+            let evts = poll_ctx.wait().context("failed to wait for events")?;
+            for evt in evts.iter_readable() {
+                match evt.token() {
+                    0 => {
+                        info!("vcpu stopped, main loop exit");
+                        return Ok(());
+                    }
+                    1 => {
+                        let mut out = [0u8, 64];
+                        match stdin.read_raw(&mut out[..]) {
+                            Ok(0) => {}
+                            Ok(n) => {
+                                serial_device
+                                    .lock()
+                                    .expect("poisoned lock")
+                                    .serial_mut()
+                                    .unwrap()
+                                    .serial
+                                    .enqueue_raw_bytes(&out[..n])
+                                    .expect("enqueue bytes failed");
+                            }
+                            Err(e) => {
+                                error!("error while reading stdin: {:?}", e);
+                            }
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
+        }
+    }
+
+    fn start_threaded(&mut self, pio_bus: Bus) -> Result<EventFdTrigger> {
+        let mut vcpu = match std::mem::take(&mut self.vcpu) {
+            // Take ownership, replace with empty
+            Some(vcpu) => vcpu,
+            None => return Err(anyhow::anyhow!("vcpu is not initialized")),
+        };
+
+        let exit_evt = EventFdTrigger::new();
+
+        // Multiple threads to interact with this FD
+        let vcpu_exit_evt = exit_evt.try_clone().context("failed to clone eventfd")?;
+
+        let builder = std::thread::Builder::new();
+        let _ = builder
+            .name(String::from("vcpu0"))
+            .spawn(move || {
+                loop {
+                    // if log_enabled!(Level::Debug) {
+                    //     debug!("VCPU register state before KVM_RUN:");
+                    //     if let Err(err) = crate::arch::regs::dump_registers(&vcpu, Level::Debug) {
+                    //         error!("Failed to dump VCPU registers before KVM_RUN: {err:#}");
+                    //     }
+                    // }
+
+                    match vcpu.run() {
+                        Ok(run) => match run {
+                            VcpuExit::IoIn(addr, data) => {
+                                pio_bus.read(addr.into(), data);
+                            }
+                            VcpuExit::IoOut(addr, data) => {
+                                pio_bus.write(addr.into(), data);
+                            }
+                            VcpuExit::MmioRead(_, _) => {
+                                info!("mmio read");
+                            }
+                            VcpuExit::MmioWrite(_, _) => {
+                                info!("mmio write");
+                            }
+                            VcpuExit::Hlt => {
+                                info!("KVM_EXIT_HLT");
+                                break;
+                            }
+                            VcpuExit::Shutdown => {
+                                error!("KVM_EXIT_SHUTDOWN");
+                                // if let Err(err) =
+                                //     crate::arch::regs::dump_registers(&vcpu, Level::Error)
+                                // {
+                                //     error!("Failed to dump VCPU registers: {err:#}");
+                                // }
+                                break;
+                            }
+                            VcpuExit::FailEntry(hardware_entry_failure_reason, _cpu) => {
+                                error!(
+                                    "KVM_EXIT_FAIL_ENTRY: Hardware Failure Reason: 0x{:X}",
+                                    hardware_entry_failure_reason
+                                );
+                                break;
+                            }
+                            VcpuExit::InternalError => {
+                                // TODO: Find how to print suberrors
+                                error!("KVM_EXIT_INTERNAL_ERROR");
+                                break;
+                            }
+                            r => {
+                                info!("KVM_EXIT: {:?}", r);
+                                break;
+                            }
+                        },
+
+                        Err(e) => {
+                            error!("VM run error: {:?}", e);
+                            break;
+                        }
+                    }
+                }
+                exit_evt.trigger().expect("failed to write to exit_evt");
+            })
+            .context("failed to spawn vcpu thread");
+
+        Ok(vcpu_exit_evt)
     }
 }

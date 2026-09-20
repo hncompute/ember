@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
 use linux_loader::{
-    bootparam::boot_params, configurator::{BootConfigurator, BootParams, linux::LinuxBootConfigurator}, loader::{Cmdline, Elf, KernelLoader, load_cmdline},
+    bootparam::boot_params,
+    configurator::{BootConfigurator, BootParams, linux::LinuxBootConfigurator},
+    loader::{Cmdline, Elf, KernelLoader, load_cmdline},
 };
 use std::{
     fs::File,
@@ -40,6 +42,8 @@ pub fn load_kernel<P: AsRef<Path>>(
         guest_mem,
         None,
         &mut kernel_file,
+        // TODO: vmlinux entry address is 0x1000000, and kernel start address should match?
+        // but somehow they don't match but things still work
         Some(GuestAddress(super::layout::KERNEL_START_ADDRESS)),
     )?
     .kernel_load;
@@ -62,13 +66,13 @@ pub fn load_initramfs<P: AsRef<Path>>(
 
     image.seek(SeekFrom::Start(0))?;
 
-    let addr = initramfs_load_addr(vm_memory, size as usize)?;
+    let addr = initramfs_load_addr(vm_memory, size)?;
 
     // Return a slice of raw memory
     // with volatile access (prevent compiler from performing optimizations normally applied to
     // regular memory reads and writes)
     // like MMIO or shared memory regions that can change externally.
-    let mut slice = vm_memory.get_slice(GuestAddress(addr), size as usize)?;
+    let mut slice = vm_memory.get_slice(GuestAddress(addr), size)?;
 
     // Fill the slice with image bytes
     image.read_exact_volatile(&mut slice)?;
@@ -171,7 +175,11 @@ pub fn configure_system(
         }
     }
 
-    LinuxBootConfigurator::write_bootparams(&BootParams::new(&params, GuestAddress(crate::arch::layout::ZERO_PAGE_START)), guest_mem).context("failed to write bootparams")?;
+    LinuxBootConfigurator::write_bootparams(
+        &BootParams::new(&params, GuestAddress(crate::arch::layout::ZERO_PAGE_START)),
+        guest_mem,
+    )
+    .context("failed to write bootparams")?;
 
     Ok(())
 }

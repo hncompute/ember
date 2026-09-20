@@ -8,6 +8,21 @@ use vm_superio::{Serial, Trigger, serial::NoEvents, serial::SerialEvents};
 
 use crate::devices::{BusDevice, EventFdTrigger};
 
+pub fn setup_serial_device(
+    input: std::io::Stdin,
+    out: std::io::Stdout,
+) -> Result<Arc<Mutex<BusDevice>>> {
+    let interrupt_evt = EventFdTrigger::new();
+
+    let serial = Arc::new(Mutex::new(BusDevice::Serial(SerialWrapper {
+        // Create instance of Serial with trigger, SerialEvents impl, and output
+        serial: Serial::with_events(interrupt_evt, NoEvents, SerialOut::Stdout(out)),
+        input: Some(input),
+    })));
+
+    Ok(serial)
+}
+
 #[derive(Debug)]
 pub enum SerialOut {
     /// Move data into the void
@@ -48,17 +63,19 @@ pub struct SerialWrapper<T: Trigger, EV: SerialEvents, I: Read + AsRawFd + Send>
 /// If yes, we need to `impl SerialEvents` trait with 4 event hooks/callbacks.
 pub type SerialDevice<I> = SerialWrapper<EventFdTrigger, NoEvents, I>;
 
-pub fn setup_serial_device(
-    input: std::io::Stdin,
-    out: std::io::Stdout,
-) -> Result<Arc<Mutex<BusDevice>>> {
-    let interrupt_evt = EventFdTrigger::new();
+impl<I: Read + AsRawFd + Send + std::fmt::Debug + 'static>
+    SerialWrapper<EventFdTrigger, NoEvents, I>
+{
+    pub fn bus_read(&mut self, offset: u64, data: &mut [u8]) {
+        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) {
+            // Data returned from the serial port
+            data[0] = self.serial.read(offset)
+        }
+    }
 
-    let serial = Arc::new(Mutex::new(BusDevice::Serial(SerialWrapper {
-        // Create instance of Serial with trigger, SerialEvents impl, and output
-        serial: Serial::with_events(interrupt_evt, NoEvents, SerialOut::Stdout(out)),
-        input: Some(input),
-    })));
-
-    Ok(serial)
+    pub fn bus_write(&mut self, offset: u64, data: &[u8]) {
+        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) && let Err(err) = self.serial.write(offset, data[0]){
+                log::error!("Failed to write to serial: {:?}", err)
+        }
+    }
 }

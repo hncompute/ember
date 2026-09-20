@@ -8,7 +8,6 @@ use vmm_sys_util::eventfd::{EFD_NONBLOCK, EventFd};
 #[derive(Debug)]
 pub struct EventFdTrigger(pub EventFd);
 
-/// NOTE: Satisfy the Trigger trait
 impl Trigger for EventFdTrigger {
     type E = io::Error;
 
@@ -28,7 +27,6 @@ impl Deref for EventFdTrigger {
     }
 }
 
-/// NOTE: Define custom behaviors here, not satisfying a trait
 impl EventFdTrigger {
     pub fn new() -> Self {
         // Non-blocking mode prevents reads/writes from blocking trigger
@@ -36,9 +34,10 @@ impl EventFdTrigger {
         Self(event_fd)
     }
 
-    // Duplicate the underlying FD.
-    // Use when different components/threads need to handle the same event FD,
-    // so each can poll/write independently.
+    /// Duplicate the underlying FD.
+    ///
+    /// Use when different components/threads need to handle the same event FD,
+    /// so each can poll/write independently.
     pub fn try_clone(&self) -> io::Result<Self> {
         self.0.try_clone().map(Self)
     }

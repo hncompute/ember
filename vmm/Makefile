@@ -7,7 +7,7 @@ test:
 	cargo test
 
 debug:
-	cargo build
+	RUST_LOG=debug cargo run -- --kernel ./assets/vmlinux.bin --initramfs ./assets/initramfs.cpio
 
 release:
 	cargo build --release
@@ -15,4 +15,3 @@ release:
 .PHONY: clean
 clean:
 	cargo clean
-
