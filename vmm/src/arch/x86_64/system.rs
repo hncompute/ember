@@ -14,8 +14,6 @@ use vm_memory::{
     Address, GuestAddress, GuestMemoryBackend, GuestMemoryMmap, ReadVolatile, VolatileMemory,
 };
 
-use crate::arch::DEFAULT_KERNEL_CMDLINE;
-
 const FIRST_ADDR_PAST_32BITS: u64 = 1 << 32; // 4 GiB
 const MEM_32BIT_GAP_SIZE: u64 = 768 << 20; // 768 MiB
 // Reserved region of physical address space for MMIO mappings,
@@ -89,7 +87,7 @@ pub fn load_boot_cmdline(
 ) -> Result<(GuestAddress, usize)> {
     let cmdline_addr = GuestAddress(crate::arch::layout::CMDLINE_START);
     let cmdline_str = match boot_args.as_ref() {
-        None => DEFAULT_KERNEL_CMDLINE,
+        None => super::DEFAULT_KERNEL_CMDLINE,
         Some(str) => str.as_str(),
     };
     // Safely convert one data type to another

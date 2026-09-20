@@ -35,7 +35,8 @@ cat >"$tree/init" <<'EOF'
 /bin/busybox mount -t devtmpfs devtmpfs /dev
 /bin/busybox mount -t proc proc /proc
 /bin/busybox mount -t sysfs sysfs /sys
-exec /bin/busybox sh
+exec /bin/busybox setsid /bin/busybox sh -c \
+    'exec /bin/busybox sh </dev/ttyS0 >/dev/ttyS0 2>&1'
 EOF
 chmod 0755 "$tree/init"
 
