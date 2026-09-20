@@ -1,8 +1,7 @@
-use std::io::Read;
 
 use anyhow::{Context, Result};
 use kvm_ioctls::{Kvm, VcpuExit, VcpuFd, VmFd};
-use log::{Level, debug, error, info, log_enabled};
+use log::{error, info};
 use vm_memory::GuestMemoryMmap;
 use vm_superio::Trigger;
 use vmm_sys_util::{poll::PollContext, terminal::Terminal};

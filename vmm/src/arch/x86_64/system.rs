@@ -66,13 +66,13 @@ pub fn load_initramfs<P: AsRef<Path>>(
 
     image.seek(SeekFrom::Start(0))?;
 
-    let addr = initramfs_load_addr(vm_memory, size as usize)?;
+    let addr = initramfs_load_addr(vm_memory, size)?;
 
     // Return a slice of raw memory
     // with volatile access (prevent compiler from performing optimizations normally applied to
     // regular memory reads and writes)
     // like MMIO or shared memory regions that can change externally.
-    let mut slice = vm_memory.get_slice(GuestAddress(addr), size as usize)?;
+    let mut slice = vm_memory.get_slice(GuestAddress(addr), size)?;
 
     // Fill the slice with image bytes
     image.read_exact_volatile(&mut slice)?;

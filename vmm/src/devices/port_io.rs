@@ -108,7 +108,7 @@ impl PortIODeviceManager {
         )?;
 
         vm_fd.register_irqfd(&self.com_evt_1_3, Self::COM_EVT_1_3_GSI)?;
-        vm_fd.register_irqfd(&self.com_evt_2_4, Self::COM_EVT_1_3_GSI)?;
+        vm_fd.register_irqfd(&self.com_evt_2_4, Self::COM_EVT_2_4_GSI)?;
         vm_fd.register_irqfd(&self.kbd_evt, Self::KBD_EVT_GSI)?;
 
         Ok(())

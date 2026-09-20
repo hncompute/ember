@@ -74,10 +74,8 @@ impl<I: Read + AsRawFd + Send + std::fmt::Debug + 'static>
     }
 
     pub fn bus_write(&mut self, offset: u64, data: &[u8]) {
-        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) {
-            if let Err(err) = self.serial.write(offset, data[0]) {
+        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) && let Err(err) = self.serial.write(offset, data[0]){
                 log::error!("Failed to write to serial: {:?}", err)
-            }
         }
     }
 }
