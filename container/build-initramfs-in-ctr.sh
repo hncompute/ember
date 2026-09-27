@@ -11,9 +11,9 @@ keepRoot=
 # Default as Alpine
 flavor=
 compress=
-addNetwork=1
+addNetwork=0
 fcnetPath="/usr/local/bin/fcnet-setup.sh"
-initramfsFile="initramfs.cpio"
+initramfsFile="initramfs.img"
 
 is_a_container() {
   if [ -f /run/.containerenv ]; then
@@ -30,48 +30,116 @@ is_a_container() {
   fi
 }
 
-main() {
-  is_a_container || {
-    echo "This needs to be run inside a container!"
-    exit 127
-    k
+parse_args() {
+  while [ "$#" -ge 1 ]; do
+    case $1 in
+      -k)
+        keepRoot=1
+        shift
+        ;;
+      -z)
+        compress=1
+        shift
+        ;;
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    -*)
+        echo "ERROR: unrecognized option \"$1\""
+        usage
+        exit 127
+        ;;
+    esac
+  done
 
-    parse_args $@
+  if [ -z "$flavor" ]; then
+    flavor="alpine"
+  fi
+}
+
+usage() {
+	cat << EOF
+USAGE:
+
+	$(basename "$0") [options] [DISTRO-FLAVOR]
+
+Creates an Alpine based initramfs.
+
+Options:
+
+    -h             Show this help
+    -k             Create an iniramfs image from an existing rootfs at .${rootfsDir}
+    -z             Compress the initramfs using gzip
+
+EOF
+}
+
+setup_alpine() {
+  apk add openssh gzip gcc libc-dev
+}
+
+rootfs_alpine() {
+  pkgs="alpine-base \
+          openrc \
+          util-linux"
+
+  mkdir "${rootfsDir}"
+
+  apk -X "http://dl-5.alpinelinux.org/alpine/latest-stable/main" -U --allow-untrusted --root ${rootfsDir} --initdb \
+		add $pkgs
+
+  cd ${rootfsDir}
+
+  # Kernel pseudo-filesystem to openrc boot runlevel
+  ln -sf /etc/init.d/devfs  ./etc/runlevels/boot/devfs
+  ln -sf /etc/init.d/procfs ./etc/runlevels/boot/procfs
+  ln -sf /etc/init.d/sysfs  ./etc/runlevels/boot/sysfs
+
+  # Enable login terminal and prompt for username/password
+  ln -sf agetty                   ./etc/init.d/agetty.ttyS0
+  # Allow root login
+  echo "ttyS0" >> ./etc/securetty
+  ln -sf /etc/init.d/agetty.ttyS0 ./etc/runlevels/default/agetty.ttyS0
+
+  cd - >/dev/null
+}
+
+main() {
+    is_a_container || { echo "This needs to be run inside a container!"; exit 127; }
+    parse_args "$@"
 
     case $flavor in
-    alpine)
-      setup_alpine
-      ;;
-    *)
-      echo "not a valid flavor: $flavor"
-      exit 127
-      ;;
+      alpine)
+        setup_alpine
+        ;;
+      *)
+        echo "not a valid flavor: $flavor"
+        exit 127
+        ;;
     esac
 
     cd $buildDir
     # Delete prev stuff just to be sure
-    rm -rf initramfs.img
+    rm -f "$buildDir/$initramfsFile"
 
     if [ -z "$keepRoot" ]; then
       rm -rf "$rootfsDir"
       echo "INFO: building rootfs for flavor: $flavor"
 
       case $flavor in
-      alpine)
-        rootfs_alpine
-        ;;
-      *)
-        echo "not a valid flavor: $flavor"
-        exit 127
-        ;;
+        alpine)
+          rootfs_alpine
+          ;;
+        *)
+          echo "not a valid flavor: $flavor"
+          exit 127
+          ;;
       esac
 
-      # set boot and account with symlink
+      # Set boot and account
       ln -sf /sbin/init ${rootfsDir}/init
-      if [ -n "$addNetwork" ]; then
-        setup_ssh_key
-        setup_ssh_insecure
-      fi
+
     fi
 
     echo "INFO: Creating initramfs"
@@ -83,14 +151,12 @@ main() {
       compressor="tee"
     fi
 
-    {cd $rootfsDir
-    find . -print0 | cpio --null --create --verbose --format=newc | ${compressor} >${buildDir}/${initramfsFile}
-    cd - >/dev/null
-  }
-  cd - >/dev/null
+    { cd "$rootfsDir"; find . -print | cpio -o -H newc | ${compressor} >"$buildDir/$initramfsFile"; cd - >/dev/null; }
 
-  echo "INFO: Done!"
+    cd - >/dev/null
+
+    echo "INFO: Done!"
 }
 
-main $0
+main "$@"
 exit 0
