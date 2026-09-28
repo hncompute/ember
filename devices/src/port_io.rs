@@ -1,4 +1,4 @@
-use crate::devices::{BusDevice, EventFdTrigger, SerialDevice, SerialOut};
+use crate::{BusDevice, EventFdTrigger, SerialDevice, SerialOut};
 use anyhow::Result;
 use kvm_ioctls::VmFd;
 use nix::libc::EFD_NONBLOCK;
@@ -10,7 +10,7 @@ use vmm_sys_util::eventfd::EventFd;
 // currently manage uart and i8042 devices?
 #[derive(Debug)]
 pub struct PortIODeviceManager {
-    pub io_bus: crate::devices::Bus,
+    pub io_bus: crate::Bus,
     /// Represent a serial device?
     pub stdio_serial: Arc<Mutex<BusDevice>>,
     /// IRQ4/GSI4
@@ -35,7 +35,7 @@ impl PortIODeviceManager {
     pub fn new(serial: Arc<Mutex<BusDevice>>) -> Result<Self> {
         // Sanity check to be Serial variant
         debug_assert!(matches!(*serial.lock().unwrap(), BusDevice::Serial(_)));
-        let io_bus = crate::devices::Bus::new();
+        let io_bus = crate::Bus::new();
         let com_evt_1_3 = serial
             .lock()
             .expect("Poisoned lock")

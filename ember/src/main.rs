@@ -3,8 +3,6 @@ use log::error;
 use std::{env, io, panic, path::PathBuf};
 use vmm_sys_util::terminal::Terminal;
 
-mod arch;
-mod devices;
 mod vmm;
 use vmm::Vmm;
 

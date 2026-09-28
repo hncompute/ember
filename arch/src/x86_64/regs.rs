@@ -4,7 +4,7 @@ use kvm_ioctls::VcpuFd;
 use log::{Level, log};
 use vm_memory::{Address, Bytes, GuestAddress, GuestMemoryBackend, GuestMemoryMmap};
 
-use crate::arch::gdt::{gdt_entry, kvm_segment_from_gdt};
+use crate::gdt::{gdt_entry, kvm_segment_from_gdt};
 
 const PML4_START: u64 = 0x9000;
 const PDP_START: u64 = 0xa000;

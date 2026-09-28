@@ -1,0 +1,12 @@
+[package]
+name = "arch"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+kvm-bindings.workspace = true
+kvm-ioctls.workspace = true
+linux-loader.workspace = true
+log.workspace = true
+vm-memory.workspace = true

@@ -37,7 +37,7 @@ pub fn create_guest_memory(vm: &VmFd, ram_size: u64) -> Result<GuestMemoryMmap> 
             .context("failed to set user memory region")?;
     }
 
-    vm.set_tss_address(crate::arch::layout::KVM_TSS_ADDRESS)
+    vm.set_tss_address(crate::layout::KVM_TSS_ADDRESS)
         .context("failed to set tss address")?;
 
     Ok(guest_mem)

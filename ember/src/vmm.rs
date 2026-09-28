@@ -5,7 +5,7 @@ use vm_memory::GuestMemoryMmap;
 use vm_superio::Trigger;
 use vmm_sys_util::{poll::PollContext, terminal::Terminal};
 
-use crate::devices::{Bus, EventFdTrigger, PortIODeviceManager, setup_serial_device};
+use devices::{Bus, EventFdTrigger, PortIODeviceManager, setup_serial_device};
 
 pub struct Vmm {
     pub kvm: Kvm,
@@ -20,9 +20,9 @@ impl Vmm {
         let kvm = Kvm::new().context("failed to initialize kvm")?;
         let vm = kvm.create_vm().context("failed to create vm")?;
 
-        crate::arch::irq::init_irqchip(&vm).context("failed to initialize irq chip")?;
+        arch::irq::init_irqchip(&vm).context("failed to initialize irq chip")?;
 
-        let guest_mem = crate::arch::memory::create_guest_memory(&vm, ram_size)?;
+        let guest_mem = arch::memory::create_guest_memory(&vm, ram_size)?;
         Ok(Vmm {
             kvm,
             vm,
@@ -36,38 +36,38 @@ impl Vmm {
         // Call ioctl underneath
         let vcpu = self.vm.create_vcpu(0).context("failed to create vcpu")?;
 
-        crate::arch::vcpu::init_cpu_id(&self.kvm, &vcpu)?;
+        arch::vcpu::init_cpu_id(&self.kvm, &vcpu)?;
 
         // TODO: Init model specific registers (msrs?) and long mode?
 
-        crate::arch::regs::init_regs(&vcpu, crate::arch::layout::KERNEL_START_ADDRESS)?;
+        arch::regs::init_regs(&vcpu, arch::layout::KERNEL_START_ADDRESS)?;
 
         // Floating-point unit, math coprocessor?
-        crate::arch::regs::init_fpu(&vcpu)?;
-        crate::arch::regs::init_sregs(&self.guest_mem, &vcpu)?;
+        arch::regs::init_fpu(&vcpu)?;
+        arch::regs::init_sregs(&self.guest_mem, &vcpu)?;
 
         self.vcpu = Some(vcpu);
 
         Ok(())
     }
 
-    pub fn load_image(&self, boot_src_cfg: &crate::arch::BootSourceConfig) -> Result<()> {
-        crate::arch::system::load_kernel(&boot_src_cfg.kernel_image_path, &self.guest_mem)
+    pub fn load_image(&self, boot_src_cfg: &arch::BootSourceConfig) -> Result<()> {
+        arch::system::load_kernel(&boot_src_cfg.kernel_image_path, &self.guest_mem)
             .context("failed to load kernel")?;
 
         let initramfs = match &boot_src_cfg.initramfs_path {
             Some(p) => Some(
-                crate::arch::system::load_initramfs(p, &self.guest_mem)
+                arch::system::load_initramfs(p, &self.guest_mem)
                     .context("failed to load initramfs")?,
             ),
             None => None,
         };
 
         let (cmdline_addr, cmdline_size) =
-            crate::arch::system::load_boot_cmdline(&boot_src_cfg.boot_args, &self.guest_mem)
+            arch::system::load_boot_cmdline(&boot_src_cfg.boot_args, &self.guest_mem)
                 .context("failed to load boot cmdline")?;
 
-        crate::arch::system::configure_system(
+        arch::system::configure_system(
             &self.guest_mem,
             cmdline_addr,
             cmdline_size,
@@ -154,7 +154,7 @@ impl Vmm {
                 loop {
                     // if log_enabled!(Level::Debug) {
                     //     debug!("VCPU register state before KVM_RUN:");
-                    //     if let Err(err) = crate::arch::regs::dump_registers(&vcpu, Level::Debug) {
+                    //     if let Err(err) = arch::regs::dump_registers(&vcpu, Level::Debug) {
                     //         error!("Failed to dump VCPU registers before KVM_RUN: {err:#}");
                     //     }
                     // }
@@ -180,7 +180,7 @@ impl Vmm {
                             VcpuExit::Shutdown => {
                                 error!("KVM_EXIT_SHUTDOWN");
                                 // if let Err(err) =
-                                //     crate::arch::regs::dump_registers(&vcpu, Level::Error)
+                                //     arch::regs::dump_registers(&vcpu, Level::Error)
                                 // {
                                 //     error!("Failed to dump VCPU registers: {err:#}");
                                 // }
