@@ -6,7 +6,7 @@ use std::{
 };
 use vm_superio::{Serial, Trigger, serial::NoEvents, serial::SerialEvents};
 
-use crate::devices::{BusDevice, EventFdTrigger};
+use crate::{BusDevice, EventFdTrigger};
 
 pub fn setup_serial_device(
     input: std::io::Stdin,

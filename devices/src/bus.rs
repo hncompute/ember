@@ -5,7 +5,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::devices::SerialDevice;
+use crate::SerialDevice;
 
 /// A device container to route reads/writes over some address space.
 /// No restrictions on what kind of device/address space this container applies to.
@@ -153,7 +153,7 @@ mod tests {
     use super::{Bus, BusDevice};
 
     fn test_device() -> Arc<Mutex<BusDevice>> {
-        crate::devices::setup_serial_device(std::io::stdin(), std::io::stdout())
+        crate::setup_serial_device(std::io::stdin(), std::io::stdout())
             .expect("test serial device should be created")
     }
 

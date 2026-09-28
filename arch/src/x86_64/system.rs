@@ -52,7 +52,7 @@ pub fn load_kernel<P: AsRef<Path>>(
 pub fn load_initramfs<P: AsRef<Path>>(
     initramfs_path: P,
     vm_memory: &GuestMemoryMmap,
-) -> Result<crate::arch::InitramfsConfig> {
+) -> Result<crate::InitramfsConfig> {
     let mut image = File::open(initramfs_path).context("failed to open initramfs file")?;
 
     // Offset = size of obj + specified num of bytes
@@ -75,7 +75,7 @@ pub fn load_initramfs<P: AsRef<Path>>(
     // Fill the slice with image bytes
     image.read_exact_volatile(&mut slice)?;
 
-    Ok(crate::arch::InitramfsConfig {
+    Ok(crate::InitramfsConfig {
         address: GuestAddress(addr),
         size,
     })
@@ -85,7 +85,7 @@ pub fn load_boot_cmdline(
     boot_args: &Option<String>,
     guest_mem: &GuestMemoryMmap,
 ) -> Result<(GuestAddress, usize)> {
-    let cmdline_addr = GuestAddress(crate::arch::layout::CMDLINE_START);
+    let cmdline_addr = GuestAddress(crate::layout::CMDLINE_START);
     let cmdline_str = match boot_args.as_ref() {
         None => super::DEFAULT_KERNEL_CMDLINE,
         Some(str) => str.as_str(),
@@ -106,7 +106,7 @@ pub fn configure_system(
     guest_mem: &GuestMemoryMmap,
     cmdline_addr: GuestAddress,
     cmdline_size: usize,
-    initramfs: &Option<crate::arch::InitramfsConfig>,
+    initramfs: &Option<crate::InitramfsConfig>,
 ) -> Result<()> {
     // Signature for valid boot sector
     const KERNEL_BOOT_FLAG_MAGIC: u16 = 0xaa55;
@@ -119,7 +119,7 @@ pub fn configure_system(
     let first_addr_past_32bits = GuestAddress(FIRST_ADDR_PAST_32BITS);
     let end_32bits_gap_start = GuestAddress(MMIO_MEM_START);
 
-    let himem_start = GuestAddress(crate::arch::layout::KERNEL_START_ADDRESS);
+    let himem_start = GuestAddress(crate::layout::KERNEL_START_ADDRESS);
 
     // TODO: Support mptable
     // Note that this puts the mptable at the last 1k of Linux's 640k base RAM
@@ -174,7 +174,7 @@ pub fn configure_system(
     }
 
     LinuxBootConfigurator::write_bootparams(
-        &BootParams::new(&params, GuestAddress(crate::arch::layout::ZERO_PAGE_START)),
+        &BootParams::new(&params, GuestAddress(crate::layout::ZERO_PAGE_START)),
         guest_mem,
     )
     .context("failed to write bootparams")?;
@@ -210,7 +210,7 @@ fn initramfs_load_addr(vm_memory: &GuestMemoryMmap, initramfs_size: usize) -> Re
     // address & 0xFFFFF000
     // bit 0 in the lower 12 positions
     // rounding down to nearest multiple of 4096
-    let align_to_pagesize = |address| address & !(crate::arch::PAGE_SIZE - 1);
+    let align_to_pagesize = |address| address & !(crate::PAGE_SIZE - 1);
 
     // NOTE: We intend to place initramfs at high address
     // to reserve memory for: Boot params, kernel cmd line and EBDA
@@ -234,7 +234,7 @@ mod tests {
 
         let addr = result.unwrap();
 
-        assert_eq!(addr % crate::arch::PAGE_SIZE as u64, 0);
+        assert_eq!(addr % crate::PAGE_SIZE as u64, 0);
         assert!(addr < 0x100000);
         assert!(addr + initramfs_size as u64 <= 0x100000);
     }

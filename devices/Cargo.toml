@@ -1,0 +1,12 @@
+[package]
+name = "devices"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+kvm-ioctls.workspace = true
+log.workspace = true
+nix.workspace = true
+vm-superio.workspace = true
+vmm-sys-util.workspace = true

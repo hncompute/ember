@@ -1,20 +1,22 @@
 [package]
 name = "ember"
-version = "0.1.0"
-description = "A GPU-first, minimalist Virtual Machine Monitor (VMM)"
-authors = ["Anh Pham <honganhpham.works@gmail.com>"]
-edition = "2024"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
 
 [dependencies]
-anyhow = "1.0.98"
-argh = "0.1.19"
-env_logger = "0.11.11"
-log = "0.4.33"
-kvm-ioctls = "0.25.0"
-nix = { version = "0.31.3", features = ["fs", "mman"] }
-kvm-bindings = "0.14.0"
-ctrlc = "3.5.2"
-vmm-sys-util = "0.15.0"
-vm-memory = { version = "0.18.0", features = ["backend-mmap"] }
-linux-loader = { version = "0.14.0", features = ["bzimage"] }
-vm-superio = "0.8.1"
+arch.workspace = true
+anyhow.workspace = true
+argh.workspace = true
+ctrlc.workspace = true
+devices.workspace = true
+env_logger.workspace = true
+kvm-bindings.workspace = true
+kvm-ioctls.workspace = true
+linux-loader.workspace = true
+log.workspace = true
+nix.workspace = true
+vm-memory.workspace = true
+vm-superio.workspace = true
+vmm-sys-util.workspace = true
