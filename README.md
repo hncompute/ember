@@ -7,7 +7,7 @@ A type-2 hypervisor in Rust with KVM, living in the userspace
 ## Build
 
 ```shell
-cd vmm
+cd ember
 make
 ```
 
@@ -32,7 +32,7 @@ bash -x ./build.sh
 ## Usage
 
 ```shell
-cd vmm
+cd ember
 ./target/release/ember --kernel ./assets/vmlinux.bin --initramfs ./assets/initramfs.img
 ```
 

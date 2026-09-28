@@ -1,4 +1,3 @@
-
 use anyhow::{Context, Result};
 use kvm_ioctls::{Kvm, VcpuExit, VcpuFd, VmFd};
 use log::{error, info};
@@ -83,7 +82,7 @@ impl Vmm {
         let mut pio_device_manager = PortIODeviceManager::new(serial_device.clone())?;
         pio_device_manager.register_devices(&self.vm)?;
 
-        let vcpu_exit_evt = self.start_threaded(pio_device_manager.io_bus.clone())?;
+        let vcpu_exit_evt = self.run_vcpu(pio_device_manager.io_bus.clone())?;
 
         let stdin = std::io::stdin().lock();
         stdin
@@ -136,7 +135,7 @@ impl Vmm {
         }
     }
 
-    fn start_threaded(&mut self, pio_bus: Bus) -> Result<EventFdTrigger> {
+    fn run_vcpu(&mut self, pio_bus: Bus) -> Result<EventFdTrigger> {
         let mut vcpu = match std::mem::take(&mut self.vcpu) {
             // Take ownership, replace with empty
             Some(vcpu) => vcpu,
