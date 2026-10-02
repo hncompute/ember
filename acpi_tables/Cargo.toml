@@ -1,0 +1,9 @@
+[package]
+name = "acpi_tables"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+zerocopy = { version = "0.8.13", features = ["derive"] }
