@@ -4,6 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+acpi_tables.workspace = true
+remain.workspace = true
 anyhow.workspace = true
 kvm-bindings.workspace = true
 kvm-ioctls.workspace = true
