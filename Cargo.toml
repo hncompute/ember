@@ -1,5 +1,13 @@
 [workspace]
-members = ["acpi_tables", "arch", "devices", "ember", "resources", "x8664"]
+members = [
+  "acpi_tables",
+  "arch",
+  "devices",
+  "ember",
+  "resources",
+  "serde_kv_derive",
+  "x8664",
+]
 resolver = "3"
 
 [workspace.package]
@@ -14,6 +22,7 @@ devices = { path = "devices" }
 acpi_tables = { path = "acpi_tables" }
 resources = { path = "resources" }
 x8664 = { path = "x8664" }
+serde_kv_derive = { path = "serde_kv_derive" }
 
 # External dependencies
 anyhow = "1.0.98"
@@ -29,3 +38,6 @@ vm-memory = { version = "0.18.0", features = ["backend-mmap"] }
 vm-superio = "0.8.1"
 vmm-sys-util = "0.15.0"
 remain = "0.2"
+serde = "1.0"
+serde-keyvalue = "0.1.0"
+thiserror = "2.0.21"

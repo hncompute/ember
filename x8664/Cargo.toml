@@ -7,3 +7,8 @@ edition.workspace = true
 
 [dependencies]
 resources.workspace = true
+arch.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+remain.workspace = true
+vm-memory.workspace = true

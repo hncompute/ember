@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]

@@ -1,9 +1,14 @@
 [package]
-name = "resources"
+name = "serde_kv_derive"
 version.workspace = true
 description.workspace = true
 authors.workspace = true
 edition.workspace = true
 
+# Declare this as procedural macro crate
+[lib]
+proc-macro = true
+
 [dependencies]
-serde = { workspace = true, features = ["derive"] }
+syn = "3"
+quote = "1"
