@@ -34,7 +34,7 @@ impl SDT {
         data.extend_from_slice(&oem_id);
         data.extend_from_slice(&oem_table);
         data.extend_from_slice(&oem_revision.to_le_bytes());
-        data.extend_from_slice(b"EMBER"); // Table creator
+        data.extend_from_slice(b"HNCL"); // Table creator
         data.extend_from_slice(&0u32.to_le_bytes());
 
         data.resize(length as usize, 0);
