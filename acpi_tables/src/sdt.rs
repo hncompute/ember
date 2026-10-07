@@ -16,7 +16,7 @@ impl SDT {
         signature: [u8; 4],
         length: u32,
         revision: u8,
-        oem_id: [u8; 5],
+        oem_id: [u8; 6],
         oem_table: [u8; 8],
         oem_revision: u32,
         // Length represents length of entire table including headers
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn test_sdt() {
         // Test immutable headers
-        let mut sdt = SDT::new(*b"TEST", 40, 1, *b"EMBER", *b"TESTTEST", 1);
+        let mut sdt = SDT::new(*b"TEST", 40, 1, *b"EMBERS", *b"TESTTEST", 1);
         let sum: u8 = sdt
             .as_slice()
             .iter()
