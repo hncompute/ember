@@ -1,0 +1,9 @@
+[package]
+name = "base"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+log = "0.4"

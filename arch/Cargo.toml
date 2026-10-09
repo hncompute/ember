@@ -10,5 +10,5 @@ anyhow.workspace = true
 serde.workspace = true
 serde_kv_derive.workspace = true
 serde-keyvalue.workspace = true
+memory.workspace = true
 argh.workspace = true
-vm-memory.workspace = true

@@ -1,5 +1,5 @@
 use acpi_tables::sdt::SDT;
-use anyhow::Result;
+use memory::{GuestAddress, MemoryRegionOptions};
 use remain::sorted;
 use serde::{Deserialize, Serialize};
 use serde_kv_derive::FromKeyValues;
@@ -23,6 +23,7 @@ pub struct VmComponents {
     pub hugepages: bool,
     pub initramfs_image: Option<File>,
     pub memory_size: u64,
+    pub pci_config: PciConfig,
     pub vm_image: VmImage,
 }
 
@@ -41,8 +42,15 @@ pub trait LinuxArch {
     type Error: StdError;
     type ArchMemoryLayout;
 
-    // Decide architecture layout
-    fn arch_memory_layout(conponents: &VmComponents) -> Result<Self::ArchMemoryLayout>;
+    /// Decide architecture layout
+    fn arch_memory_layout(components: &VmComponents)
+    -> Result<Self::ArchMemoryLayout, Self::Error>;
+
+    /// Return a Vec of valid memory addresses as pairs of address and length
+    fn guest_memory_layout(
+        components: &VmComponents,
+        arch_memory_layout: &Self::ArchMemoryLayout,
+    ) -> std::result::Result<Vec<(GuestAddress, u64, MemoryRegionOptions)>, Self::Error>;
 }
 
 #[cfg(test)]
