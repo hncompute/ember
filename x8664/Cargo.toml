@@ -1,0 +1,15 @@
+[package]
+name = "x8664"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+resources.workspace = true
+arch.workspace = true
+base.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+remain.workspace = true
+memory.workspace = true

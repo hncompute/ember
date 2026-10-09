@@ -4,9 +4,11 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+acpi_tables.workspace = true
+remain.workspace = true
 anyhow.workspace = true
-kvm-bindings.workspace = true
-kvm-ioctls.workspace = true
-linux-loader.workspace = true
-log.workspace = true
-vm-memory.workspace = true
+serde.workspace = true
+serde_kv_derive.workspace = true
+serde-keyvalue.workspace = true
+memory.workspace = true
+argh.workspace = true

@@ -1,0 +1,10 @@
+[package]
+name = "memory"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+remain.workspace = true
+serde.workspace = true

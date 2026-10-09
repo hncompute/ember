@@ -1,3 +1,4 @@
+use memory::GuestAddress;
 
 #[derive(Debug, Default)]
 pub struct BootSourceConfig {
@@ -10,6 +11,6 @@ pub struct BootSourceConfig {
 /// Type for passing information about initramfs into the guest memory
 #[derive(Debug)]
 pub struct InitramfsConfig {
-    pub address: vm_memory::GuestAddress,
+    pub address: GuestAddress,
     pub size: usize,
 }
