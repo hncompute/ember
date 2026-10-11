@@ -1,5 +1,14 @@
 [workspace]
-members = ["arch", "devices", "ember"]
+members = [
+  "acpi_tables",
+  "arch", "base",
+  "devices",
+  "ember",
+  "memory",
+  "resources",
+  "serde_kv_derive",
+  "x8664",
+]
 resolver = "3"
 
 [workspace.package]
@@ -10,10 +19,18 @@ edition = "2024"
 
 [workspace.dependencies]
 arch = { path = "arch" }
+base = { path = "base" }
+devices = { path = "devices" }
+acpi_tables = { path = "acpi_tables" }
+resources = { path = "resources" }
+x8664 = { path = "x8664" }
+serde_kv_derive = { path = "serde_kv_derive" }
+memory = { path = "memory" }
+
+# External dependencies
 anyhow = "1.0.98"
 argh = "0.1.19"
 ctrlc = "3.5.2"
-devices = { path = "devices" }
 env_logger = "0.11.11"
 kvm-bindings = "0.14.0"
 kvm-ioctls = "0.25.0"
@@ -23,3 +40,7 @@ nix = { version = "0.31.3", features = ["fs", "mman"] }
 vm-memory = { version = "0.18.0", features = ["backend-mmap"] }
 vm-superio = "0.8.1"
 vmm-sys-util = "0.15.0"
+remain = "0.2"
+serde = "1.0"
+serde-keyvalue = "0.1.0"
+thiserror = "2.0.21"

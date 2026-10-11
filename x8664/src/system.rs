@@ -14,8 +14,6 @@ use vm_memory::{
     Address, GuestAddress, GuestMemoryBackend, GuestMemoryMmap, ReadVolatile, VolatileMemory,
 };
 
-const FIRST_ADDR_PAST_32BITS: u64 = 1 << 32; // 4 GiB
-const MEM_32BIT_GAP_SIZE: u64 = 768 << 20; // 768 MiB
 // Reserved region of physical address space for MMIO mappings,
 // keep device address ranges from colliding with RAM
 const MMIO_MEM_START: u64 = FIRST_ADDR_PAST_32BITS - MEM_32BIT_GAP_SIZE;
