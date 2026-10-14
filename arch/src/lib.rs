@@ -3,7 +3,7 @@ use memory::{GuestAddress, MemoryRegionOptions};
 use remain::sorted;
 use serde::{Deserialize, Serialize};
 use serde_kv_derive::FromKeyValues;
-use std::{error::Error as StdError, fs::File};
+use std::{collections::BTreeMap, error::Error as StdError, fs::File};
 
 pub mod config;
 pub use config::{BootSourceConfig, InitramfsConfig};
@@ -51,6 +51,16 @@ pub trait LinuxArch {
         components: &VmComponents,
         arch_memory_layout: &Self::ArchMemoryLayout,
     ) -> std::result::Result<Vec<(GuestAddress, u64, MemoryRegionOptions)>, Self::Error>;
+
+    // fn build_vm(
+    //     components: &VmComponents,
+    //     arch_memory_layout: &Self::ArchMemoryLayout,
+    //     serial_parameters: &BTreeMap<(SerialHardware, u8), SerialParameter>,
+    //     vm: Arc<dyn VmArch>,
+    //     devices: Vec<Box<dyn BusDeviceObj>,
+    //     irq_chip: Arc<dyn IrqChipArch>,
+    //     vcpu_ids: &mut Vec<usize>
+    // ) -> std::result::Result<LinuxVm, Self::Error> {}
 }
 
 #[cfg(test)]

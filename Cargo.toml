@@ -1,9 +1,34 @@
+[package]
+name = "ember"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+arch.workspace = true
+anyhow.workspace = true
+argh.workspace = true
+base.workspace = true
+ctrlc.workspace = true
+devices.workspace = true
+env_logger.workspace = true
+kvm-bindings.workspace = true
+kvm-ioctls.workspace = true
+linux-loader.workspace = true
+log.workspace = true
+nix.workspace = true
+remain.workspace = true
+vm-memory.workspace = true
+vm-superio.workspace = true
+vmm-sys-util.workspace = true
+
 [workspace]
 members = [
   "acpi_tables",
-  "arch", "base",
+  "arch",
+  "base",
   "devices",
-  "ember",
   "memory",
   "resources",
   "serde_kv_derive",
