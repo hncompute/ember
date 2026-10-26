@@ -1,0 +1,10 @@
+[package]
+name = "hypervisor"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+base.workspace = true
+

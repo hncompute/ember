@@ -1,81 +1,52 @@
-use anyhow::Result;
-use std::{
-    io::{Read, Write},
-    os::fd::AsRawFd,
-    sync::{Arc, Mutex},
-};
-use vm_superio::{Serial, Trigger, serial::NoEvents, serial::SerialEvents};
+use serde::{Deserialize, Serialize};
+use serde_kv_derive::FromKeyValues;
+use std::path::PathBuf;
 
-use crate::{BusDevice, EventFdTrigger};
-
-pub fn setup_serial_device(
-    input: std::io::Stdin,
-    out: std::io::Stdout,
-) -> Result<Arc<Mutex<BusDevice>>> {
-    let interrupt_evt = EventFdTrigger::new();
-
-    let serial = Arc::new(Mutex::new(BusDevice::Serial(SerialWrapper {
-        // Create instance of Serial with trigger, SerialEvents impl, and output
-        serial: Serial::with_events(interrupt_evt, NoEvents, SerialOut::Stdout(out)),
-        input: Some(input),
-    })));
-
-    Ok(serial)
-}
-
-#[derive(Debug)]
-pub enum SerialOut {
+/// Possible types of serial devices
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub enum SerialType {
     /// Move data into the void
-    Sink(std::io::Sink),
-    Stdout(std::io::Stdout),
-    // Write to standard output
+    Sink,
+    /// Write to standard output
+    Stdout,
 }
 
-impl Write for SerialOut {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        match self {
-            Self::Sink(sink) => sink.write(buf),
-            Self::Stdout(stdout) => stdout.write(buf),
-        }
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        match self {
-            Self::Sink(sink) => sink.flush(),
-            Self::Stdout(stdout) => stdout.flush(),
-        }
+impl Default for SerialType {
+    fn default() -> Self {
+        Self::Sink
     }
 }
 
-/// Wrapper over imported serial device
-#[derive(Debug)]
-pub struct SerialWrapper<T: Trigger, EV: SerialEvents, I: Read + AsRawFd + Send> {
-    /// Represent serial device object.
-    /// This handles UART registers and FIFO, guest reads/writes, interrupt triggering, and output through Write implementation.
-    pub serial: Serial<T, EV, SerialOut>,
-    /// Input to serial device (must be readable!).
-    /// Host stdin/file/socket.
-    pub input: Option<I>,
+/// Serial device hardware types
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum SerialHardware {
+    /// Standard PC style (8250/16550 compatible) UART (still applied today yall)
+    Serial,
 }
 
-/// Type to represent a serial device (send/receive one bit at a time).
-/// NOTE: We don't intend to implement custom event handling, thus concrete NoEvents (replace SerialEventsWrapper).
-/// If yes, we need to `impl SerialEvents` trait with 4 event hooks/callbacks.
-pub type SerialDevice<I> = SerialWrapper<EventFdTrigger, NoEvents, I>;
-
-impl<I: Read + AsRawFd + Send + std::fmt::Debug + 'static>
-    SerialWrapper<EventFdTrigger, NoEvents, I>
-{
-    pub fn bus_read(&mut self, offset: u64, data: &mut [u8]) {
-        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) {
-            // Data returned from the serial port
-            data[0] = self.serial.read(offset)
-        }
-    }
-
-    pub fn bus_write(&mut self, offset: u64, data: &[u8]) {
-        if let (Ok(offset), 1) = (u8::try_from(offset), data.len()) && let Err(err) = self.serial.write(offset, data[0]){
-                log::error!("Failed to write to serial: {:?}", err)
-        }
+impl Default for SerialHardware {
+    fn default() -> Self {
+        Self::Serial
     }
 }
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, FromKeyValues)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case", default)]
+pub struct SerialParameters {
+    #[serde(rename = "type")]
+    pub type_: SerialType,
+    pub hardware: SerialHardware,
+    pub name: Option<String>,
+    pub path: Option<PathBuf>,
+    pub input: Option<PathBuf>,
+    #[serde(default = "serial_parameters_default_num")]
+    pub num: u8,
+    pub console: bool,
+    pub stdin: bool,
+}
+
+fn serial_parameters_default_num() -> u8 {
+    1
+}
+
+impl SerialParameters {}

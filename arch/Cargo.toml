@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 acpi_tables.workspace = true
+devices.workspace = true
 remain.workspace = true
 anyhow.workspace = true
 serde.workspace = true
