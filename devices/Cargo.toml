@@ -4,8 +4,12 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+argh.workspace = true
 anyhow.workspace = true
 kvm-ioctls.workspace = true
+serde.workspace = true
+serde_kv_derive.workspace = true
+serde-keyvalue.workspace = true
 log.workspace = true
 nix.workspace = true
 vm-superio.workspace = true

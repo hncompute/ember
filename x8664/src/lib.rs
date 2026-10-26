@@ -124,6 +124,7 @@ pub fn arch_memory_regions(
     ));
 
     // RAM betweeb 1MB to 4GB
+    // TODO: Reject out-of-aperture configurations or constrain the endpoint to the 1 MiB–4 GiB window before constructing the ranges.
     let mem_1m_to_4g = arch_memory_layout.pci_mmio_before_32bit.start.min(mem_size) - 1 * MB;
     regions.push((
         GuestAddress(1 * MB),

@@ -1,9 +1,36 @@
+[package]
+name = "ember"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+arch.workspace = true
+anyhow.workspace = true
+argh.workspace = true
+base.workspace = true
+ctrlc.workspace = true
+devices.workspace = true
+env_logger.workspace = true
+kvm-bindings.workspace = true
+kvm-ioctls.workspace = true
+linux-loader.workspace = true
+log.workspace = true
+libc.workspace = true
+nix.workspace = true
+remain.workspace = true
+vm-memory.workspace = true
+vm-superio.workspace = true
+vmm-sys-util.workspace = true
+
 [workspace]
 members = [
   "acpi_tables",
-  "arch", "base",
+  "arch",
+  "base",
   "devices",
-  "ember",
+  "hypervisor",
   "memory",
   "resources",
   "serde_kv_derive",
@@ -36,11 +63,13 @@ kvm-bindings = "0.14.0"
 kvm-ioctls = "0.25.0"
 linux-loader = { version = "0.14.0", features = ["bzimage"] }
 log = "0.4.33"
+libc = "0.2.188"
 nix = { version = "0.31.3", features = ["fs", "mman"] }
 vm-memory = { version = "0.18.0", features = ["backend-mmap"] }
 vm-superio = "0.8.1"
 vmm-sys-util = "0.15.0"
 remain = "0.2"
 serde = "1.0"
+serde_json = "1"
 serde-keyvalue = "0.1.0"
 thiserror = "2.0.21"
