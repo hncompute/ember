@@ -1,3 +1,4 @@
+use serde::de::Error;
 use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
     de::{self, Visitor},
@@ -9,16 +10,16 @@ use std::{
     os::fd::RawFd,
     panic::{AssertUnwindSafe, catch_unwind, resume_unwind},
 };
-use serde::de::Error;
 
 const KCMP_FILE: u32 = 0;
 
 thread_local! {
+    // Store fds while serialized messages hold the indexes.
     static DESCRIPTOR_SRC: RefCell<Option<Vec<Option<SafeDescriptor>>>> = Default::default();
 }
 
 thread_local! {
-    /// Thread-local storage with one instance for one thread.
+    // Thread-local storage with one instance for one thread.
     // RefCell allows us to mutate the collection via shared references (common &T type).
     static DESCRIPTOR_DST: RefCell<Option<Vec<RawDescriptor>>> = Default::default();
 }
@@ -243,7 +244,7 @@ fn push_descriptor(rd: RawDescriptor) -> Result<usize, &'static str> {
     })
 }
 
-/// Deserializes a descriptor provided via `deserialize_with_descriptors`.
+/// Deserialize a descriptor provided via `deserialize_with_descriptors`.
 fn deserialize_descriptor<'de, D>(de: D) -> std::result::Result<SafeDescriptor, D::Error>
 where
     D: Deserializer<'de>,

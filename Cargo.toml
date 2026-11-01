@@ -53,6 +53,7 @@ resources = { path = "resources" }
 x8664 = { path = "x8664" }
 serde_kv_derive = { path = "serde_kv_derive" }
 memory = { path = "memory" }
+hypervisor = { path = "hypervisor" }
 
 # External dependencies
 anyhow = "1.0.98"

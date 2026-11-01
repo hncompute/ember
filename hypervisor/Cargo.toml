@@ -6,5 +6,6 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
+serde = { workspace = true, features = ["derive"] }
 base.workspace = true
-
+memory.workspace = true

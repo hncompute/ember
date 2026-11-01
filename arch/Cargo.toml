@@ -13,3 +13,4 @@ serde_kv_derive.workspace = true
 serde-keyvalue.workspace = true
 memory.workspace = true
 argh.workspace = true
+hypervisor.workspace = true

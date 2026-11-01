@@ -82,6 +82,7 @@ dependencies = [
  "anyhow",
  "argh",
  "devices",
+ "hypervisor",
  "memory",
  "remain",
  "serde",
@@ -297,6 +298,8 @@ name = "hypervisor"
 version = "0.1.0"
 dependencies = [
  "base",
+ "memory",
+ "serde",
 ]
 
 [[package]]

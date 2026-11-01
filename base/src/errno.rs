@@ -1,6 +1,6 @@
+use core::fmt;
 use serde::Deserialize;
 use serde::Serialize;
-use core::fmt;
 use std::fmt::Display;
 use std::io;
 use std::result;
@@ -61,4 +61,3 @@ impl Display for Error {
         Into::<io::Error>::into(*self).fmt(f)
     }
 }
-
