@@ -4,7 +4,7 @@ use hypervisor::{VcpuArch, VcpuInitArch};
 use memory::{GuestAddress, MemoryRegionOptions};
 use remain::sorted;
 use serde::{Deserialize, Serialize};
-use serde_kv_derive::FromKeyValues;
+use serde_keyvalue::FromKeyValues;
 use std::{collections::BTreeMap, error::Error as StdError, fs::File, sync::Arc};
 
 pub use hypervisor::VmArch; // Type alias
@@ -31,6 +31,7 @@ pub struct VmComponents {
     pub initramfs_image: Option<File>,
     pub memory_size: u64,
     pub pci_config: PciConfig,
+    pub vcpu_count: usize,
     pub vm_image: VmImage,
 }
 

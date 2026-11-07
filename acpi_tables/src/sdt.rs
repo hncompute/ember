@@ -1,3 +1,6 @@
+use std::{
+    fs::File, io::{ErrorKind, Read, Result}, path::Path,
+};
 use zerocopy::{Immutable, IntoBytes};
 
 /// SDT (System Description Table) is a generic format to create various ACPI tables like
@@ -42,6 +45,18 @@ impl SDT {
 
         sdt.update_checksum();
         sdt
+    }
+
+    pub fn from_file(path: &Path) -> Result<Self> {
+        let mut file = File::open(path)?;
+        let mut data = Vec::new();
+        file.read_to_end(&mut data)?;
+        let checksum = super::generate_checksum(data.as_slice());
+        if checksum == 0 {
+            Ok(SDT { data })
+        } else {
+            Err(ErrorKind::InvalidData.into())
+        }
     }
 
     /// Calculate sum of every byte

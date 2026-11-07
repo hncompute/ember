@@ -1,10 +1,16 @@
 mod cmdline;
+mod config;
+
+use anyhow::Context;
 use anyhow::Result;
+use anyhow::anyhow;
 use argh::FromArgs;
-use base::{debug, error};
+use base::{debug, error, set_thread_name};
 use cmdline::{CmdlineArgs, RunCommand};
 
 use crate::cmdline::Command;
+use crate::config::VmConfig;
+use crate::config::run_config;
 
 #[repr(i32)] // Set the size for enum
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -41,7 +47,20 @@ fn prepare_argh_args<I: IntoIterator<Item = String>>(argh_iter: I) -> Vec<String
 }
 
 fn run_vm(cmd: RunCommand) -> Result<CommandStatus> {
-    Ok(CommandStatus::SuccessOrVmStop)
+    let cfg = match TryInto::<VmConfig>::try_into(cmd) {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            eprintln!("{e}");
+            return Err(anyhow!("{}", e));
+        }
+    };
+
+    if let Some(ref name) = cfg.name {
+        set_thread_name(name).context("Failed to set the thread name")?;
+    }
+
+    let exit_state = run_config(cfg)?;
+    Ok(CommandStatus::from(exit_state))
 }
 
 fn ember_main<I: IntoIterator<Item = String>>(args: I) -> Result<CommandStatus> {

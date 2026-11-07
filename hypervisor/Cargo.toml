@@ -9,3 +9,5 @@ edition.workspace = true
 serde = { workspace = true, features = ["derive"] }
 base.workspace = true
 memory.workspace = true
+serde_keyvalue.workspace = true
+

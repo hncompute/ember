@@ -1,6 +1,6 @@
-use core::fmt;
 use serde::Deserialize;
 use serde::Serialize;
+use std::fmt;
 use std::fmt::Display;
 use std::io;
 use std::result;
@@ -60,4 +60,9 @@ impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         Into::<io::Error>::into(*self).fmt(f)
     }
+}
+
+/// Returns the last errno as a Result that is always an error.
+pub fn errno_result<T>() -> Result<T> {
+    Err(Error::last())
 }

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
-use serde_kv_derive::FromKeyValues;
-use std::path::PathBuf;
+use serde_keyvalue::FromKeyValues;
+use std::{
+    fmt::{self, Display},
+    path::PathBuf,
+};
 
 /// Possible types of serial devices
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -30,6 +33,16 @@ impl Default for SerialHardware {
     }
 }
 
+impl Display for SerialHardware {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match &self {
+            SerialHardware::Serial => "serial".to_string(),
+        };
+
+        write!(f, "{s}")
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, FromKeyValues)]
 #[serde(deny_unknown_fields, rename_all = "kebab-case", default)]
 pub struct SerialParameters {
@@ -43,6 +56,7 @@ pub struct SerialParameters {
     pub num: u8,
     pub console: bool,
     pub stdin: bool,
+    pub earlycon: bool,
 }
 
 fn serial_parameters_default_num() -> u8 {

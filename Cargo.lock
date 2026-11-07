@@ -86,8 +86,7 @@ dependencies = [
  "memory",
  "remain",
  "serde",
- "serde-keyvalue",
- "serde_kv_derive",
+ "serde_keyvalue",
 ]
 
 [[package]]
@@ -225,12 +224,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "argh",
- "kvm-ioctls",
  "log",
  "nix",
  "serde",
- "serde-keyvalue",
- "serde_kv_derive",
+ "serde_keyvalue",
  "vm-superio",
  "vmm-sys-util",
 ]
@@ -251,6 +248,7 @@ dependencies = [
 name = "ember"
 version = "0.1.0"
 dependencies = [
+ "acpi_tables",
  "anyhow",
  "arch",
  "argh",
@@ -258,13 +256,15 @@ dependencies = [
  "ctrlc",
  "devices",
  "env_logger",
- "kvm-bindings",
- "kvm-ioctls",
+ "hypervisor",
  "libc",
  "linux-loader",
  "log",
  "nix",
  "remain",
+ "resources",
+ "serde",
+ "serde_keyvalue",
  "vm-memory",
  "vm-superio",
  "vmm-sys-util",
@@ -300,6 +300,7 @@ dependencies = [
  "base",
  "memory",
  "serde",
+ "serde_keyvalue",
 ]
 
 [[package]]
@@ -349,27 +350,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "kvm-bindings"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11cf0ca75d59e9d298647c59cf6c5286fa048120caa77972a7a504a0824d234f"
-dependencies = [
- "vmm-sys-util",
-]
-
-[[package]]
-name = "kvm-ioctls"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06ac372c120eb893b086d1a12027669cf2b478d1f71204021ffa7adf57948d63"
-dependencies = [
- "bitflags 2.13.2",
- "kvm-bindings",
- "libc",
- "vmm-sys-util",
 ]
 
 [[package]]
@@ -556,19 +536,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde-keyvalue"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d2701d07ab4695b24a86b4a970431a6917f85473f500ccaf386f567da3957a7"
-dependencies = [
- "nom",
- "num-traits",
- "remain",
- "serde",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "serde_core"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -602,11 +569,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_kv_derive"
+name = "serde_keyvalue"
+version = "0.1.0"
+dependencies = [
+ "argh",
+ "nom",
+ "num-traits",
+ "remain",
+ "serde",
+ "serde_keyvalue_derive",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "serde_keyvalue_derive"
 version = "0.1.0"
 dependencies = [
  "quote",
- "syn 3.0.6",
+ "syn 2.0.119",
 ]
 
 [[package]]
