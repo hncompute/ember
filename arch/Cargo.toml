@@ -5,10 +5,11 @@ edition.workspace = true
 
 [dependencies]
 acpi_tables.workspace = true
+devices.workspace = true
 remain.workspace = true
 anyhow.workspace = true
 serde.workspace = true
-serde_kv_derive.workspace = true
-serde-keyvalue.workspace = true
+serde_keyvalue.workspace = true
 memory.workspace = true
 argh.workspace = true
+hypervisor.workspace = true

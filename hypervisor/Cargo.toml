@@ -1,0 +1,12 @@
+[package]
+name = "hypervisor"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+base.workspace = true
+memory.workspace = true
+serde_keyvalue.workspace = true

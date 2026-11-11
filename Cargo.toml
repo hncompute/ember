@@ -1,12 +1,42 @@
+[package]
+name = "ember"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+acpi_tables.workspace = true
+arch.workspace = true
+anyhow.workspace = true
+argh.workspace = true
+base.workspace = true
+ctrlc.workspace = true
+devices.workspace = true
+env_logger.workspace = true
+linux-loader.workspace = true
+log.workspace = true
+libc.workspace = true
+nix.workspace = true
+remain.workspace = true
+vm-memory.workspace = true
+vm-superio.workspace = true
+vmm-sys-util.workspace = true
+hypervisor.workspace = true
+resources.workspace = true
+serde.workspace = true
+serde_keyvalue.workspace = true
+
 [workspace]
 members = [
   "acpi_tables",
-  "arch", "base",
+  "arch",
   "devices",
-  "ember",
+  "base",
+  "hypervisor",
   "memory",
   "resources",
-  "serde_kv_derive",
+  "serde_keyvalue",
   "x8664",
 ]
 resolver = "3"
@@ -24,23 +54,23 @@ devices = { path = "devices" }
 acpi_tables = { path = "acpi_tables" }
 resources = { path = "resources" }
 x8664 = { path = "x8664" }
-serde_kv_derive = { path = "serde_kv_derive" }
+serde_keyvalue = { path = "serde_keyvalue", features = ["argh_derive"] }
 memory = { path = "memory" }
+hypervisor = { path = "hypervisor" }
 
 # External dependencies
 anyhow = "1.0.98"
 argh = "0.1.19"
 ctrlc = "3.5.2"
 env_logger = "0.11.11"
-kvm-bindings = "0.14.0"
-kvm-ioctls = "0.25.0"
 linux-loader = { version = "0.14.0", features = ["bzimage"] }
 log = "0.4.33"
+libc = "0.2.188"
 nix = { version = "0.31.3", features = ["fs", "mman"] }
 vm-memory = { version = "0.18.0", features = ["backend-mmap"] }
 vm-superio = "0.8.1"
 vmm-sys-util = "0.15.0"
 remain = "0.2"
-serde = "1.0"
-serde-keyvalue = "0.1.0"
+serde_json = "1"
 thiserror = "2.0.21"
+serde = { version = "1", features = ["derive"] }

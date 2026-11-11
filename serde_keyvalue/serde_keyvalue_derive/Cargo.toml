@@ -1,0 +1,13 @@
+[package]
+name = "serde_keyvalue_derive"
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+description = "FromKeyValues derive extracted from crosvm"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "2"
+quote = "1.0"

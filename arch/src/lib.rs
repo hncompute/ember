@@ -1,9 +1,11 @@
 use acpi_tables::sdt::SDT;
+use devices::{Bus, BusDevice, IrqChipX8664, SerialHardware, SerialParameters};
+use hypervisor::{VcpuInitX8664, VcpuX8664, VmX8664};
 use memory::{GuestAddress, MemoryRegionOptions};
 use remain::sorted;
 use serde::{Deserialize, Serialize};
-use serde_kv_derive::FromKeyValues;
-use std::{error::Error as StdError, fs::File};
+use serde_keyvalue::FromKeyValues;
+use std::{collections::BTreeMap, error::Error as StdError, fs::File, sync::Arc};
 
 pub mod config;
 pub use config::{BootSourceConfig, InitramfsConfig};
@@ -24,6 +26,7 @@ pub struct VmComponents {
     pub initramfs_image: Option<File>,
     pub memory_size: u64,
     pub pci_config: PciConfig,
+    pub vcpu_count: usize,
     pub vm_image: VmImage,
 }
 
@@ -36,6 +39,23 @@ pub struct MemoryRegionConfig {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, FromKeyValues)]
 pub struct PciConfig {
     pub mem: Option<MemoryRegionConfig>,
+}
+
+/// Hold the elements needed to build a Linux VM
+#[sorted]
+pub struct LinuxVm {
+    /// Dispatches port I/O accesses to devices
+    pub io_bus: Arc<Bus>,
+    /// Interrupt controllers and interrupt delivery
+    pub irq_chip: Arc<dyn IrqChipX8664>,
+    /// Dispatches memory-mapped device accesses
+    pub mmio_bus: Arc<Bus>,
+    /// Number of guest CPUs
+    pub vcpu_count: usize,
+    /// Initial CPU state: registers, special registers, FPU, MSRs, etc.
+    pub vcpu_init: Vec<VcpuInitX8664>,
+    /// Already-created vCPUs
+    pub vcpus: Option<Vec<Arc<dyn VcpuX8664>>>,
 }
 
 pub trait LinuxArch {
@@ -51,6 +71,16 @@ pub trait LinuxArch {
         components: &VmComponents,
         arch_memory_layout: &Self::ArchMemoryLayout,
     ) -> std::result::Result<Vec<(GuestAddress, u64, MemoryRegionOptions)>, Self::Error>;
+
+    fn build_vm(
+        components: &VmComponents,
+        arch_memory_layout: &Self::ArchMemoryLayout,
+        serial_parameters: &BTreeMap<(SerialHardware, u8), SerialParameters>,
+        vm: Arc<dyn VmX8664>,
+        devices: Vec<Box<dyn BusDevice>>,
+        irq_chip: Arc<dyn IrqChipX8664>,
+        vcpu_ids: &mut Vec<usize>,
+    ) -> std::result::Result<LinuxVm, Self::Error>;
 }
 
 #[cfg(test)]

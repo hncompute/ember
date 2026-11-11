@@ -1,13 +1,10 @@
-pub mod port_io;
-pub use port_io::PortIODeviceManager;
+mod bus;
+mod irqchip;
+mod serial;
 
-pub mod serial;
-pub use serial::{SerialDevice, SerialOut, setup_serial_device};
-
-pub mod bus;
-pub use bus::{Bus, BusDevice};
-
-pub mod eventfd;
-pub use eventfd::EventFdTrigger;
-
-// TODO: mod pci/pcie for PCIe devices/PCI functions (GPU integration)
+pub use self::bus::Bus;
+pub use self::bus::BusDevice;
+pub use self::irqchip::IrqChipX8664;
+pub use self::serial::SerialHardware;
+pub use self::serial::SerialParameters;
+pub use self::serial::SerialType;
