@@ -2,14 +2,16 @@ use std::{
     collections::BTreeMap,
     fs::OpenOptions,
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use acpi_tables::sdt::SDT;
 use anyhow::Context;
 use anyhow::Result;
-use arch::{VmComponents, VmImage};
-use base::debug;
-use devices::{SerialHardware, SerialParameters};
+use anyhow::anyhow;
+use arch::{PciConfig, VmComponents, VmImage};
+use base::{debug, open_file_or_duplicate};
+use devices::{IrqChipX8664, SerialHardware, SerialParameters};
 use hypervisor::HypervisorKind;
 use remain::sorted;
 use resources::AddressRange;
@@ -30,9 +32,10 @@ pub struct VmConfig {
     pub initramfs_path: Option<PathBuf>,
     pub irq_chip: Option<IrqChipKind>,
     pub memory: Option<u64>,
-    // For system allocator?
+    // TODO: For system allocator?
     pub mmio_address_ranges: Vec<AddressRange>,
     pub name: Option<String>,
+    pub pci_config: PciConfig,
     #[serde(with = "serde_serial_params")]
     pub serial_params: BTreeMap<(SerialHardware, u8), SerialParameters>,
     pub vcpu_count: Option<usize>,
@@ -51,6 +54,7 @@ impl Default for VmConfig {
             memory: None,
             mmio_address_ranges: Vec::new(),
             name: None,
+            pci_config: Default::default(),
             serial_params: BTreeMap::new(),
             vcpu_count: None,
         }
@@ -98,6 +102,12 @@ pub enum IrqChipKind {
     /// All interrupt controllers are emulated in the kernel.
     #[serde(rename_all = "kebab-case")]
     Kernel,
+}
+
+impl Default for IrqChipKind {
+    fn default() -> Self {
+        IrqChipKind::Kernel
+    }
 }
 
 pub fn parse_serial_options(s: &str) -> Result<SerialParameters, String> {
@@ -220,7 +230,14 @@ fn setup_vm_components(cfg: &VmConfig) -> Result<VmComponents> {
 
     Ok(VmComponents {
         acpi_sdts,
+        hugepages: cfg.hugepages,
+        memory_size: cfg
+            .memory
+            .unwrap_or(256)
+            .checked_mul(1024 * 1024)
+            .ok_or_else(|| anyhow!("requested memory size too large"))?,
         initramfs_image,
+        pci_config: cfg.pci_config,
         vcpu_count,
         vm_image,
     })
@@ -238,4 +255,18 @@ fn run_kvm(
     let device_path = device_path.unwrap_or(Path::new(KVM_PATH));
     let kvm = Kvm::new_with_path(device_path)
         .with_context(|| format!("failed to open KVM device {}", device_path.display()))?;
+
+    let arch_memory_layout =
+        Arch::arch_memory_layout(&components).context("failed to create arch memory layout")?;
+    let guest_mem = create_guest_memory(&cfg, &components, &arch_memory_layout, &kvm)?;
+    let vm = Arc::new(KvmVm::new(&kvm, guest_mem).context("failed to create vm")?);
+    let irq_chip: Arc<dyn IrqChipX8664> = match cfg.irq_chip.unwrap_or_default() {
+        IrqChipKind::Kernel => {
+            Arc::new(KvmKernelIrqChip::new(vm.clone())).context("failed to create IRQ chip")?
+        }
+    };
+
+    run_vm()
 }
+
+fn run_vm() -> Result<ExitState> {}

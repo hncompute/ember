@@ -4,6 +4,7 @@ use serde::{
     de::{self, Visitor},
     ser,
 };
+use std::fs::File;
 use std::{
     cell::{Cell, RefCell},
     fmt, mem,
@@ -166,6 +167,9 @@ pub trait IntoRawDescriptor {
 impl IntoRawDescriptor for SafeDescriptor {
     fn into_raw_descriptor(self) -> RawDescriptor {
         let descriptor = self.descriptor;
+        // Take ownership and forget about the value without running the destructor (Drop trait)
+        // Useful when we transfer ownership from Rust to C (reclaim space but not close underlying
+        // resouce)
         mem::forget(self);
         descriptor
     }
@@ -193,6 +197,13 @@ impl PartialEq for SafeDescriptor {
         };
 
         ret == 0
+    }
+}
+
+impl From<File> for SafeDescriptor {
+    fn from(f: File) -> Self {
+        // Safe because we own the File at this point
+        unsafe { SafeDescriptor::from_raw_descriptor(f.into_raw_descriptor()) }
     }
 }
 

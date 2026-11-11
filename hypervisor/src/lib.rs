@@ -2,20 +2,15 @@ use base::Result;
 use base::SafeDescriptor;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_keyvalue::FromKeyValues;
 use std::arch::x86_64::CpuidResult;
 use std::path::PathBuf;
-use serde_keyvalue::FromKeyValues;
 
 #[cfg(target_arch = "x86_64")]
 pub mod x8664;
 
 #[cfg(target_arch = "x86_64")]
 pub use crate::x8664::*;
-
-#[cfg(target_arch = "x86_64")]
-pub use VcpuInitX8664 as VcpuInitArch;
-pub use VcpuX8664 as VcpuArch;
-pub use VmX8664 as VmArch;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, FromKeyValues)]
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]

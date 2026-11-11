@@ -1,5 +1,7 @@
 use std::{
-    fs::File, io::{ErrorKind, Read, Result}, path::Path,
+    fs::File,
+    io::{ErrorKind, Read, Result},
+    path::Path,
 };
 use zerocopy::{Immutable, IntoBytes};
 
